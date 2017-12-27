@@ -40,7 +40,7 @@ Installing this package requires WP-CLI v1.1.0 or greater. Update to the latest 
 
 Once you've done so, you can install this package with:
 
-    wp package install git@github.com:umbarry/import-plus.git
+    wp package install git@github.com:umbarry/wp-cli-import-plus.git
 
 ## Contributing
 
