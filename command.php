@@ -71,10 +71,7 @@ WP_CLI::add_hook('after_add_command:import', function ()
 
 			// launch import command
 			$import_args = array_intersect_key($assoc_args, array('authors' => '', 'skip' => '', 'url' => '')); // only arguments allowed for wp import command
-			ob_start();
 			WP_CLI::run_command(array_merge(array('import'), $args), $import_args);
-			$ret = ob_get_clean();
-			WP_CLI::line($ret);
 			WP_CLI::success('ok');
 		}
 
