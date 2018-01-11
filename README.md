@@ -16,7 +16,7 @@ Quick links: [Using](#using) | [Installing](#installing) | [Contributing](#contr
 
 This package implements the following command:
 
-	 wp import-plus <file> [--extra-terms-taxonomy=<taxonomy-name>] [--extra-terms=<terms>] [--extra-post-meta-keys=<meta-keys>] [--extra-post-meta-values=<meta-values>] [--authors=<authors>] [--skip=<data-type>]
+	 wp import-plus <file> [--extra-terms-taxonomy=<taxonomy-name>] [--extra-terms=<terms>] [--extra-post-meta-keys=<meta-keys>] [--extra-post-meta-values=<meta-values>] [--skip-categories] [--skip-tags] [--authors=<authors>] [--skip=<data-type>]
 
 **OPTIONS**
 
