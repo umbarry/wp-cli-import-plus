@@ -61,10 +61,10 @@ WP_CLI::add_hook('after_add_command:import', function ()
 		 * 	The values will be assigned respectively in the same order to the keys specified in --extra-post-meta-keys.
 		 *
 		 * [--skip-categories]
-		 * : If set categories will not be imported
+		 * : If set categories will not be imported, except for those set with --extra-categories
 		 *
 		 * [--skip-tags]
-		 * : If set tags will not be imported
+		 * : If set tags will not be imported, except for those set with --extra-tags
 		 *
 		 * ---
 		 * default: success
@@ -177,11 +177,29 @@ WP_CLI::add_hook('after_add_command:import', function ()
 		public function skipTerms($terms)
 		{
 			$taxonomies_to_skip = $this->skip_terms;
-			return array_filter($terms, function ($term) use ($taxonomies_to_skip)
+			$extra_terms = $this->terms;
+			return array_filter($terms, function ($term) use ($taxonomies_to_skip, $extra_terms)
 			{
 				$taxonomy = ('tag' == $term['domain']) ? 'post_tag' : $term['domain'];
 
 				if(in_array($taxonomy, $taxonomies_to_skip)) {
+
+					// check is the command own extra category
+					if(is_taxonomy_hierarchical($taxonomy)) {
+
+						// for hierarchical we have terms ids, so we must take the slug before the check
+						foreach($extra_terms[$taxonomy] as $extra_term_id) {
+							$extra_term = get_term($extra_term_id, $taxonomy);
+
+							if($extra_term->slug == $term['slug'])  {
+								return true;
+							}
+						}
+					} else {
+						// if slug is in extra terms, don't filter
+						return in_array($term['slug'], $extra_terms[$taxonomy]);
+					}
+
 					return false;
 				}
 

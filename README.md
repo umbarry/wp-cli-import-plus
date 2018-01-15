@@ -48,10 +48,10 @@ This package implements the following command:
      specified in --extra-post-meta-keys.
      
     [--skip-categories]
-     If set categories will not be imported
+     If set categories will not be imported, except for those set with --extra-categories
     	
 	[--skip-tags]
-	 If set tags will not be imported
+	 If set tags will not be imported, except for those set with --extra-tags
 
 Params --authors and --skip serve for the same scope of the [wp import](https://developer.wordpress.org/cli/commands/import/) command
 
