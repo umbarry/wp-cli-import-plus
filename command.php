@@ -48,7 +48,7 @@ WP_CLI::add_hook('after_add_command:import', function ()
 		 * [--extra-custom-terms-taxonomy=<taxonomy-name>]
 		 * : The taxonomy of the extra terms to associate to each imported post. If not set the extra-custom-terms parameter will be ignored.
 		 *
-		 * [--extra-custom-terms=<IDs/slugs>]
+		 * [--extra-custom-terms=<IDs-or-slugs>]
 		 * : Comma-separated list of terms to associate to each imported post. If you want to enter terms of a hierarchical taxonomy like
 		 * 	categories, then use IDs. If you want to add non-hierarchical terms like tags, then use names.
 		 *  The parameter will be ignored if extra-custom-terms-taxonomy isn't set.
@@ -160,15 +160,15 @@ WP_CLI::add_hook('after_add_command:import', function ()
 			// terms
 			if(!empty($this->terms)) {
 				foreach($this->terms as $taxonomy => $terms) {
-					WP_CLI::line('-- PLUS: Setting extra post terms (' . $taxonomy . ')');
-					wp_set_post_terms($post_id, $this->terms, $taxonomy, true);
+					WP_CLI::line('-- PLUS: Setting extra ' . $taxonomy . ': ' . implode(', ', $terms));
+					wp_set_post_terms($post_id, $terms, $taxonomy, true);
 				}
 			}
 
 			// post metas
 			if(!empty($this->post_metas)) {
-				WP_CLI::line('-- PLUS: Setting extra post metas');
 				foreach($this->post_metas as $key => $value) {
+					WP_CLI::line('-- PLUS: Setting post meta ' . $key);
 					add_post_meta($post_id, $key, $value);
 				}
 			}
