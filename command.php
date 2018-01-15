@@ -12,7 +12,6 @@ WP_CLI::add_hook('after_add_command:import', function ()
 {
 	class Import_Plus extends WP_CLI_Command
 	{
-		private $term_taxonomy = 'post_tag';
 		private $terms = array();
 		private $post_metas = array();
 		private $skip_terms = array();
@@ -40,12 +39,19 @@ WP_CLI::add_hook('after_add_command:import', function ()
 		 * [--skip=<data-type>]
 		 * : Skip importing specific data. Supported options are: ‘attachment’ and ‘image_resize’ (skip time-consuming thumbnail generation).
 		 *
-		 * [--extra-terms-taxonomy=<taxonomy-name>]
-		 * : The taxonomy of the extra terms to associate to each imported post. Default "post_tag".
+		 * [--extra-categories=<IDs>]
+		 * : Comma-separated list of categories IDs to associate to each imported post.
 		 *
-		 * [--extra-terms=<slugs>]
+		 * [--extra-tags=<slugs>]
+		 * : Comma-separated list of post_tag slugs to associate to each imported post.
+		 *
+		 * [--extra-custom-terms-taxonomy=<taxonomy-name>]
+		 * : The taxonomy of the extra terms to associate to each imported post. If not set the extra-custom-terms parameter will be ignored.
+		 *
+		 * [--extra-custom-terms=<IDs/slugs>]
 		 * : Comma-separated list of terms to associate to each imported post. If you want to enter terms of a hierarchical taxonomy like
 		 * 	categories, then use IDs. If you want to add non-hierarchical terms like tags, then use names.
+		 *  The parameter will be ignored if extra-custom-terms-taxonomy isn't set.
 		 *
 		 * [--extra-post-meta-keys=<post-meta-keys>]
 		 * : Comma-separated list of post-meta keys to associate to each imported post.
@@ -69,7 +75,7 @@ WP_CLI::add_hook('after_add_command:import', function ()
 		 *
 		 * ## EXAMPLES
 		 *
-		 *     wp import-plus --extra-terms-taxonomy=category --extra-terms=imported-posts --extra-post-meta-keys=imported_post,custom_meta --extra-post-meta-values=yes,example export.xml
+		 *     wp import-plus --extra-tags=imported --extra-post-meta-keys=imported_post,custom_meta --extra-post-meta-values=yes,example export.xml
 		 *
 		 * @when after_wp_load
 		 */
@@ -105,20 +111,24 @@ WP_CLI::add_hook('after_add_command:import', function ()
 
 		private function orderTerms($assoc_args)
 		{
-			// tassonomia
-			if(!empty($assoc_args['extra-terms-taxonomy'])) {
-				$this->term_taxonomy = $assoc_args['extra-terms-taxonomy'];
-
-				if(!taxonomy_exists($this->term_taxonomy)) {
-					WP_CLI::error('Unexisting taxonomy', true);
-				}
+			// categories
+			if(!empty($assoc_args['extra-categories'])) {
+				$this->terms['category'] = explode(',', $assoc_args['extra-categories']);
 			}
 
-			WP_CLI::line('Assumed ' . $this->term_taxonomy . ' how terms taxonomy to add');
+			// tags
+			if(!empty($assoc_args['extra-tags'])) {
+				$this->terms['post_tag'] = explode(',', $assoc_args['extra-tags']);
+			}
 
-			// terms
-			if(!empty($assoc_args['extra-terms'])) {
-				$this->terms = explode(',', $assoc_args['extra-terms']);
+			// custom taxonomy
+			if(!empty($assoc_args['extra-custom-terms-taxonomy'])) {
+
+				if(!taxonomy_exists($assoc_args['extra-custom-terms-taxonomy'])) {
+					WP_CLI::error('Unexisting custom taxonomy', true);
+				} else if(!empty($assoc_args['extra-custom-terms'])) {
+					$this->terms[$assoc_args['extra-custom-terms-taxonomy']] = explode(',', $assoc_args['extra-custom-terms']);
+				}
 			}
 		}
 
@@ -149,13 +159,15 @@ WP_CLI::add_hook('after_add_command:import', function ()
 
 			// terms
 			if(!empty($this->terms)) {
-				WP_CLI::line('--- Setting extra post terms to ' . $post->post_title);
-				wp_set_post_terms($post_id, $this->terms, $this->term_taxonomy, true);
+				foreach($this->terms as $taxonomy => $terms) {
+					WP_CLI::line('-- PLUS: Setting extra post terms (' . $taxonomy . ')');
+					wp_set_post_terms($post_id, $this->terms, $taxonomy, true);
+				}
 			}
 
 			// post metas
 			if(!empty($this->post_metas)) {
-				WP_CLI::line('--- Setting extra post metas to '  . $post->post_title);
+				WP_CLI::line('-- PLUS: Setting extra post metas');
 				foreach($this->post_metas as $key => $value) {
 					add_post_meta($post_id, $key, $value);
 				}

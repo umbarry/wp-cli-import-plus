@@ -16,32 +16,42 @@ Quick links: [Using](#using) | [Installing](#installing) | [Contributing](#contr
 
 This package implements the following command:
 
-	 wp import-plus <file> [--extra-terms-taxonomy=<taxonomy-name>] [--extra-terms=<terms>] [--extra-post-meta-keys=<meta-keys>] [--extra-post-meta-values=<meta-values>] [--skip-categories] [--skip-tags] [--authors=<authors>] [--skip=<data-type>]
+	 wp import-plus <file> [--extra-categories=<IDs>] [--extra-tags=<slugs>] [--extra-custom-terms-taxonomy=<taxonomy-name>] [--extra-custom-terms=<IDs/slugs>] [--extra-post-meta-keys=<meta-keys>] [--extra-post-meta-values=<meta-values>] [--skip-categories] [--skip-tags] [--authors=<authors>] [--skip=<data-type>]
 
 **OPTIONS**
 
 	<file>
 		Path to one or more valid WXR files for importing. Directories are also accepted.
-
-	[--extra-terms-taxonomy=<taxonomy-name>]
-		The taxonomy of the extra terms to associate to each imported post. Default "post_tag"
 		
-	[--extra-terms=<terms>]
-		Comma-separated list of terms to associate to each imported post. If you want to enter terms of a hierarchical taxonomy like
-     categories, then use IDs. If you want to add non-hierarchical terms like tags, then use names.
+	[--extra-categories=<IDs>]
+	 Comma-separated list of categories IDs to associate to each imported post.
+	 
+	[--extra-tags=<slugs>]
+	 Comma-separated list of post_tag slugs to associate to each imported post.
+	 
+	[--extra-custom-terms-taxonomy=<taxonomy-name>]
+	 The taxonomy of the extra terms to associate to each imported post. 
+	 If not set the extra-custom-terms parameter will be ignored.
+	 
+	[--extra-custom-terms=<IDs/slugs>]
+	 Comma-separated list of terms to associate to each imported post. 
+	 If you want to enter terms of a hierarchical taxonomy like
+	 categories, then use IDs. If you want to add non-hierarchical terms like tags, 
+	 then use names. The parameter will be ignored if extra-custom-terms-taxonomy isn't set.
      
     [--extra-post-meta-keys=<meta-keys>]
-     	Comma-separated list of post-meta keys to associate to each imported post.
+     Comma-separated list of post-meta keys to associate to each imported post.
      	
     [--extra-post-meta-values=<meta-values>]
-    	Comma-separated list of post-meta value to associate to each imported post.
-     The values will be assigned respectively in the same order to the keys specified in --extra-post-meta-keys.
+     Comma-separated list of post-meta value to associate to each imported post.
+     The values will be assigned respectively in the same order to the keys 
+     specified in --extra-post-meta-keys.
      
     [--skip-categories]
-    	If set categories will not be imported
+     If set categories will not be imported
     	
 	[--skip-tags]
-		If set tags will not be imported
+	 If set tags will not be imported
 
 Params --authors and --skip serve for the same scope of the [wp import](https://developer.wordpress.org/cli/commands/import/) command
 
