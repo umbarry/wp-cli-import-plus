@@ -90,17 +90,15 @@ WP_CLI::add_hook('after_add_command:import', function ()
 
 			// skip terms
 			if(isset($assoc_args['skip-categories'])) {
-				add_filter('wp_import_categories', '__return_empty_array');
 				$this->skip_terms[] = 'category';
 			}
 
 			if(isset($assoc_args['skip-tags'])) {
-				add_filter('wp_import_tags', '__return_empty_array');
 				$this->skip_terms[] = 'post_tag';
 			}
 
 			if(!empty($this->skip_terms)) {
-				add_filter('wp_import_post_terms', array($this, 'skipTerms'), 10);
+				add_filter('wp_import_post_terms', array($this, 'manageTerms'), 10);
 			}
 
 			// launch import command
@@ -157,14 +155,6 @@ WP_CLI::add_hook('after_add_command:import', function ()
 				return;
 			}
 
-			// terms
-			if(!empty($this->terms)) {
-				foreach($this->terms as $taxonomy => $terms) {
-					WP_CLI::line('-- PLUS: Setting extra ' . $taxonomy . ': ' . implode(', ', $terms));
-					wp_set_post_terms($post_id, $terms, $taxonomy, true);
-				}
-			}
-
 			// post metas
 			if(!empty($this->post_metas)) {
 				foreach($this->post_metas as $key => $value) {
@@ -174,37 +164,41 @@ WP_CLI::add_hook('after_add_command:import', function ()
 			}
 		}
 
-		public function skipTerms($terms)
+		public function manageTerms($terms)
 		{
 			$taxonomies_to_skip = $this->skip_terms;
-			$extra_terms = $this->terms;
-			return array_filter($terms, function ($term) use ($taxonomies_to_skip, $extra_terms)
+
+			// skipping taxonomies
+			$terms = array_filter($terms, function ($term) use ($taxonomies_to_skip)
 			{
 				$taxonomy = ('tag' == $term['domain']) ? 'post_tag' : $term['domain'];
+				return !in_array($taxonomy, $taxonomies_to_skip);
+			});
 
-				if(in_array($taxonomy, $taxonomies_to_skip)) {
+			// adding extra terms
+			if(!empty($this->terms)) {
+				foreach($this->terms as $taxonomy => $extraTerms) {
+					$domain = ('tag' == $taxonomy) ? 'post_tag' : $taxonomy;
+					foreach ($extraTerms as $term) {
 
-					// check is the command own extra category
-					if(is_taxonomy_hierarchical($taxonomy)) {
-
-						// for hierarchical we have terms ids, so we must take the slug before the check
-						foreach($extra_terms[$taxonomy] as $extra_term_id) {
-							$extra_term = get_term($extra_term_id, $taxonomy);
-
-							if($extra_term->slug == $term['slug'])  {
-								return true;
-							}
+						if(is_taxonomy_hierarchical($taxonomy)) {
+							$extra_term = get_term($term, $taxonomy);
+							$slug = empty($extra_term) ? $term : $extra_term->slug;
+						} else {
+							$slug = $term;
 						}
-					} else {
-						// if slug is in extra terms, don't filter
-						return in_array($term['slug'], $extra_terms[$taxonomy]);
+
+						$terms[] = array(
+							'domain' 	=> $domain,
+							'slug'		=> $slug,
+							'name'		=> $slug // if term not exists will be created with this name
+						);
 					}
 
-					return false;
 				}
+			}
 
-				return true;
-			});
+			return $terms;
 		}
 	}
 
