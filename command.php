@@ -66,6 +66,9 @@ WP_CLI::add_hook('after_add_command:import', function ()
 		 * [--skip-tags]
 		 * : If set tags will not be imported, except for those set with --extra-tags
 		 *
+		 * [--profile]
+		 * : Print a table with queries information made for each post
+		 *
 		 * ---
 		 * default: success
 		 * options:
@@ -87,6 +90,12 @@ WP_CLI::add_hook('after_add_command:import', function ()
 
 			// hook on saved post
 			add_action('save_post', array($this, 'associateExtraData'), 10, 2);
+
+			if(isset($assoc_args['profile'])) {
+				define('SAVEQUERIES', true);
+				add_filter('wp_import_post_data_raw', array($this, 'startProfiling'), 1);
+				add_filter('wp_import_post_meta', array($this, 'endProfiling'), 10000);
+			}
 
 			// skip terms
 			if(isset($assoc_args['skip-categories'])) {
@@ -199,6 +208,32 @@ WP_CLI::add_hook('after_add_command:import', function ()
 			}
 
 			return $terms;
+		}
+
+		public function startProfiling($raw)
+		{
+			global $wpdb;
+			$wpdb->queries = array();
+
+			return $raw;
+		}
+
+		public function endProfiling($thing)
+		{
+			global $wpdb;
+
+			$table = array();
+			foreach($wpdb->queries as $query) {
+				$table[] = array(
+					'QUERY' => $query[0],
+					'TIME' => $query[1],
+					'TRACE' => $query[2],
+				);
+			}
+
+			WP_CLI\Utils\format_items('yaml', $table, array('QUERY', 'TIME', 'TRACE'));
+
+			return $thing;
 		}
 	}
 
