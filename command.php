@@ -100,10 +100,12 @@ WP_CLI::add_hook('after_add_command:import', function ()
 			// skip terms
 			if(isset($assoc_args['skip-categories'])) {
 				$this->skip_terms[] = 'category';
+				add_filter('wp_import_categories', '__return_empty_array');
 			}
 
 			if(isset($assoc_args['skip-tags'])) {
 				$this->skip_terms[] = 'post_tag';
+				add_filter('wp_import_tags', '__return_empty_array');
 			}
 
 			if(!empty($this->skip_terms)) {
